@@ -1,0 +1,7 @@
+assets/
+generated/
+private/
+out/
+*.user
+.vs/
+CMakeSettings.json
