@@ -3,9 +3,11 @@
 Static recompilation of **Mushihimesama Futari** (Xbox 360, 2006/2012) for native
 PC execution, built on the [ReXGlue SDK](https://github.com/rexglue/rexglue-sdk).
 
-> **No game files here.** This repository contains no game code, data, or
-> assets, and never will. You supply them yourself from a disc you own — see
-> [Game data](#game-data) and [docs/DUMPING.md](docs/DUMPING.md).
+> **No game data here.** No game executable, no `media/`, no audio, no artwork
+> off the disc — you supply all of it yourself, from a copy you own; see
+> [Game data](#game-data) and [docs/DUMPING.md](docs/DUMPING.md). The two
+> exceptions are named in [NOTICE.md](NOTICE.md): a title screenshot and the
+> application icon, both game-derived and both kept for identification only.
 
 > ⚠️ **Built with heavy use of AI.** Code, tooling, and docs in this repo were
 > written largely with LLM assistance. Hobby project — verify before relying on
@@ -13,10 +15,10 @@ PC execution, built on the [ReXGlue SDK](https://github.com/rexglue/rexglue-sdk)
 
 ![Mushihimesama Futari title screen](screenshots/title.png)
 
-**Latest release:** v1.4.1 (Windows, macOS, Steam Deck) —
-see [CHANGELOG.md](CHANGELOG.md). Per-OS build and packaging details:
-[PORTS.md](PORTS.md). This repository is source and tags only; prebuilt
-bundles are not published here, so the path below is to build it yourself.
+**Latest release:** v1.4.2 — source only; the current player bundles are v1.4.1
+(Windows, macOS, Steam Deck). See [CHANGELOG.md](CHANGELOG.md). Per-OS build and
+packaging details: [PORTS.md](PORTS.md). Prebuilt bundles are not published here,
+so the path below is to build it yourself.
 
 **Status:** title, menus, audio, controller, and saves work, and all 8 game modes
 load, run, and mode-switch cleanly. Deeper gameplay can still hit rare recompiler
@@ -60,8 +62,10 @@ console, and lists checksums to verify the result.
 
 ## Build
 
-Needs CMake 3.25+, Ninja, **LLVM/clang-cl** 20+ (at `C:\Program Files\LLVM`), the
-Windows SDK (for `rc.exe`), Python 3.8+, and git + bash.
+Needs CMake 3.25+, Ninja, **LLVM/clang-cl** 20+ (at `C:\Program Files\LLVM`),
+**Visual Studio 2022 Build Tools** with the Desktop C++ workload (clang-cl targets
+the MSVC ABI, so it needs those headers and libs — plus `rc.exe` from the bundled
+Windows SDK), Python 3.8+, and git + bash.
 
 The `thirdparty/rexglue-sdk` submodule points at
 [springah/rexglue-sdk](https://github.com/springah/rexglue-sdk), a fork of the
@@ -175,11 +179,16 @@ endorsed by, or connected to Cave in any way.
 
 Nothing here is a substitute for owning the game:
 
-- **No game content is distributed.** Not in this repository, not in the release
-  bundles, not in any form. The port is inert without a dump you provide.
+- **No game data is distributed.** No disc image, no game executable, no
+  `media/`, no audio, no artwork off the disc — not here and not in the release
+  bundles. The port is inert without a dump you provide. The only game-derived
+  files in this repository are the title screenshot and the application icon,
+  both for identification; see [NOTICE.md](NOTICE.md).
 - **The recompiled C++ is produced on your machine, from your own disc.** It is
   a translation of Cave's executable code, so it belongs to you no more than the
-  disc does — don't redistribute it or anything built from it.
+  disc does. Don't redistribute it. The release bundles necessarily contain it,
+  compiled — which is why they go only to people who already own the game, and
+  are not published here.
 - **Do not ask for game files.** Requests for dumps, links, or "where do I get
   the ISO" will be closed. [docs/DUMPING.md](docs/DUMPING.md) covers the only
   supported route: your own disc, read with your own console.

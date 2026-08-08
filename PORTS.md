@@ -62,11 +62,19 @@ tag at its counterpart commit and confirm the trees match before pushing:
 orphaned tag silently publishes a tree that is on no branch.
 
 One known exception: `main` begins at v1.3.0, because the identity-scrub rewrite
-dropped the 41 commits before it. **`v1.0.0`–`v1.1.0` therefore point into
-history that is no longer on any branch** — they are the only refs keeping those
-27 commits alive, and no counterpart exists on `main` to re-point them at. They
-resolve and fetch normally; they simply are not reachable from `main`. Everything
-from v1.3.1 on is.
+dropped the 42 commits before it (pre-rewrite `main` had 93; the rewrite kept 51).
+**`v1.0.0`–`v1.1.0` therefore point into history that is no longer on any
+branch**, and no counterpart exists on `main` to re-point them at. They resolve
+and fetch normally; they simply are not reachable from `main`. Everything from
+v1.3.1 on is.
+
+Deleting those tags would **not** remove that history from GitHub. `refs/pull/1/head`
+reaches all 27 of those commits too, and PR refs cannot be deleted by the
+repository owner — only GitHub Support can remove them. Any future scrub has to
+account for that: a rewrite cleans `main`, the tags and every clone, while the PR
+refs keep the pre-rewrite objects fetchable by anyone who asks for them by name.
+If that residue is unacceptable, the answer is a fresh repository, not another
+rewrite.
 
 Packaging rules — each one is here because it broke once:
 
@@ -76,10 +84,34 @@ Packaging rules — each one is here because it broke once:
 2. **A public bundle carries no game data.** Ship the exe, the 8 module DLLs, the
    SDK runtime + GPU plugin, `icon1.ico`, `icon2.ico`, `futari.ini`,
    `extract_assets.bat` + `extract_iso.py` (so the user can populate `assets/`
-   themselves), and `RUN.txt` copied from [`dist/RUN.txt`](dist/RUN.txt). An
-   empty `dlc/` with its `README.txt` is fine; the packages themselves are not.
-   `assets/` and `dlc/` contents are the game — they never go in a bundle that
-   leaves your machine. Grep the staged tree for `.xex` before zipping.
+   themselves), `RUN.txt` copied from [`dist/RUN.txt`](dist/RUN.txt), and
+   [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt). An empty `dlc/` with its
+   `README.txt` is fine; the packages themselves are not. `assets/` and `dlc/`
+   contents are the game — they never go in a bundle that leaves your machine.
+   Grep the staged tree for `.xex` before zipping.
+
+   ⚠️ `icon1.ico`, `icon2.ico` and `dlc/README.txt` are **not tracked in this
+   repo** — they live only in the staging tree, so this rule cannot be executed
+   from a clean clone. Track them under `dist/`, or drop them from the list.
+
+   ⚠️ Note what "no game data" does and does not mean: the exe and the 8 module
+   DLLs *are* the game's own program code, recompiled. That is unavoidable in a
+   binary port and is why bundles go only to owners and are never published on
+   GitHub — but do not describe a bundle as containing no game content. Rule 2 is
+   about *data*: no disc image, no `media/`, no audio, no artwork.
+
+2b. **Licence text travels with the binary.** The runtime statically links FFmpeg
+   and libmspack (both LGPL-2.1), plus ~20 permissive components, every one of
+   which requires its notice to accompany a binary distribution. Regenerate the
+   notices whenever the SDK pin moves:
+
+   ```sh
+   bash scripts/gen_third_party_notices.sh > THIRD-PARTY-NOTICES.txt
+   ```
+
+   The LGPL also obliges a written offer of source and relinkable objects; that
+   offer is in the file's header and points at the SDK repo. If the bundles ever
+   stop being buildable from a public SDK tag, that offer stops being true.
 3. **Zip with 7z**, under a single top-level `Mushihimesama-Futari-PC/` folder.
    .NET `Compress-Archive` writes non-spec backslash entries and no wrapper folder.
 4. **Diff the new zip's file list against the previous release** before publishing,

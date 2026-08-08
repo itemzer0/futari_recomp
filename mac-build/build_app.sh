@@ -19,7 +19,7 @@
 set -euo pipefail
 
 PROJ="${PROJ:-$HOME/Desktop/projects}"
-VER="${VER:-1.4.1}"
+VER="${VER:-1.4.2}"
 BUILD="${BUILD:-$PROJ/futari-mac/futari_recomp/out/build/mac-arm64-release}"
 # SDK source tree. Its runtime dylibs land in $SDK/out/mac-arm64/.
 # The PINNED SUBMODULE WINS: builds link the submodule, so the bundle must ship
@@ -83,6 +83,25 @@ echo "[3/7] bundled MoltenVK (self-contained, no Homebrew dependency)"
 # Resolve the real dylib (Homebrew symlink) so the copy is standalone.
 MVK="$(readlink -f /opt/homebrew/lib/libMoltenVK.dylib)"
 cp "$MVK" "$C/lib/libMoltenVK.dylib"
+
+# Third-party licences must travel with the binary: the runtime statically links
+# FFmpeg and libmspack (LGPL-2.1), and MoltenVK here is Apache-2.0. Fail the
+# build rather than ship a bundle with no licence text -- every macOS bundle
+# before this one shipped none.
+if [ ! -f THIRD-PARTY-NOTICES.txt ]; then
+  echo "  regenerating THIRD-PARTY-NOTICES.txt" >&2
+  SDK="$SDK" bash scripts/gen_third_party_notices.sh > THIRD-PARTY-NOTICES.txt
+fi
+cp THIRD-PARTY-NOTICES.txt "$C/Resources/"
+MVK_LIC="$(dirname "$MVK")/../share/doc/molten-vk/LICENSE"
+[ -f "$MVK_LIC" ] || MVK_LIC="$(brew --prefix molten-vk 2>/dev/null)/LICENSE"
+if [ -f "$MVK_LIC" ]; then
+  cp "$MVK_LIC" "$C/Resources/LICENSE-MoltenVK.txt"
+else
+  echo "  ERROR: MoltenVK LICENSE not found (looked beside the dylib and in brew --prefix)." >&2
+  echo "         Apache-2.0 requires it to ship. Copy it to Contents/Resources/ and re-run." >&2
+  exit 1
+fi
 # ICD json: library_path "../../../lib/libMoltenVK.dylib" resolves from
 # Resources/vulkan/icd.d/ -> Contents/lib/libMoltenVK.dylib
 cat > "$C/Resources/vulkan/icd.d/MoltenVK_icd.json" <<'JSON'

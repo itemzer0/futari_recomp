@@ -100,11 +100,34 @@ def read_directory(f, fs_base, sector, size):
     return entries
 
 
+# Files that did not come out whole, or names the ISO should not have contained.
+# A split, truncated or corrupt rip is by far the most common problem here, and
+# it used to be reported as a success: the loop below broke on a short read, then
+# printed the size from the directory table rather than the bytes written, so
+# every file could land empty and the script still exited 0. The failure then
+# surfaced much later in codegen, with a green extraction log as evidence.
+PROBLEMS = []
+
+
+def safe_name(name: str) -> bool:
+    """Reject entry names that would write outside the output directory."""
+    return not (
+        name in ("", ".", "..")
+        or "/" in name
+        or "\\" in name
+        or ":" in name
+    )
+
+
 def extract_tree(f, fs_base, sector, size, dest: Path, rel=""):
     entries = read_directory(f, fs_base, sector, size)
     for e in entries:
-        item_path = dest / e["name"]
         rel_path  = f"{rel}/{e['name']}" if rel else e["name"]
+        if not safe_name(e["name"]):
+            PROBLEMS.append(f"{rel_path}: unsafe entry name in the directory table, skipped")
+            print(f"  SKIPPED    {rel_path}  (unsafe name -- corrupt directory table?)")
+            continue
+        item_path = dest / e["name"]
         if e["is_dir"]:
             item_path.mkdir(parents=True, exist_ok=True)
             extract_tree(f, fs_base, e["start_sector"], e["size"], item_path, rel_path)
@@ -112,14 +135,22 @@ def extract_tree(f, fs_base, sector, size, dest: Path, rel=""):
             item_path.parent.mkdir(parents=True, exist_ok=True)
             f.seek(fs_base + e["start_sector"] * SECTOR_SIZE)
             remaining = e["size"]
+            written = 0
             with open(item_path, "wb") as out:
                 while remaining > 0:
                     chunk = f.read(min(65536, remaining))
                     if not chunk:
                         break
                     out.write(chunk)
+                    written += len(chunk)
                     remaining -= len(chunk)
-            print(f"  extracted  {rel_path}  ({e['size']:,} bytes)")
+            if written != e["size"]:
+                PROBLEMS.append(
+                    f"{rel_path}: wrote {written:,} of {e['size']:,} bytes (truncated)"
+                )
+                print(f"  TRUNCATED  {rel_path}  ({written:,} of {e['size']:,} bytes)")
+            else:
+                print(f"  extracted  {rel_path}  ({written:,} bytes)")
 
 
 def main():
@@ -167,6 +198,20 @@ def main():
             xex = candidate
             break
 
+    # Fail loudly on an incomplete extraction rather than reporting success and
+    # letting it resurface as a confusing codegen error hours later.
+    if PROBLEMS:
+        print(f"\nEXTRACTION FAILED -- {len(PROBLEMS)} problem(s):", file=sys.stderr)
+        for p in PROBLEMS:
+            print(f"  {p}", file=sys.stderr)
+        print(
+            "\nThe ISO is most likely truncated, split across files, or corrupt.\n"
+            "Verify your dump against the checksums in docs/DUMPING.md and re-rip\n"
+            "it; do not build from what was extracted here.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     if xex.exists():
         # Copy to assets root for ReXGlue
         target = out_dir / "default.xex"
@@ -178,6 +223,7 @@ def main():
         print("  python3 scripts/analyse_xex.py assets/default.xex")
     else:
         print("\nWARNING: default.xex not found in extracted files.")
+        sys.exit(1)
         print("The disc may use a different executable name or structure.")
 
 

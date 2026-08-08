@@ -130,7 +130,17 @@ int32_t ClampInt(int32_t value, int32_t min, int32_t max) {
 }
 
 std::filesystem::path ResolveIniPath(const std::filesystem::path& exe_dir, std::string_view value) {
-  std::filesystem::path path = Trim(value);
+  std::string text = Trim(value);
+  // Strip one layer of matching quotes. The SDK's own parser for this same file
+  // tolerates quoted values (cvar.cpp Unquote()), and the defaults written below
+  // model the quoted form -- without this, `user_data_path = "D:\Futari Saves"`
+  // keeps its quotes, fails is_absolute(), and resolves to an uncreatable
+  // <exe_dir>\"D:\Futari Saves".
+  if (text.size() >= 2 && ((text.front() == '"' && text.back() == '"') ||
+                           (text.front() == '\'' && text.back() == '\''))) {
+    text = text.substr(1, text.size() - 2);
+  }
+  std::filesystem::path path = text;
   if (path.empty()) {
     return {};
   }
@@ -163,6 +173,9 @@ void WriteDefaultIni(const std::filesystem::path& path) {
   }
   file << "# Mushihimesama Futari (recompiled) PC settings\n"
        << "# Edit this file, then restart the game. Values shown are the defaults.\n"
+       << "# This file is yours: the game only reads it. The in-game settings\n"
+       << "# overlay saves to futari_cvars.ini instead, so it cannot overwrite\n"
+       << "# what you put here.\n"
        << "\n"
        << "[Display]\n"
        << "# Window size as WxH. The game opens windowed at this size; the guest\n"
@@ -306,6 +319,13 @@ class FutariApp : public rex::ReXApp {
   void OnConfigurePaths(rex::PathConfig& paths) override {
     const auto exe_dir = rex::filesystem::GetExecutableFolder();
     LoadFutariIni(exe_dir, paths);
+    // Give the SDK its own cvar file. It defaults config_path to
+    // <exe_dir>/futari.ini (rex_app.cpp) -- the very file parsed above -- and
+    // the settings overlay's "Save to config" (F4) writes it with a truncating
+    // stream as a flat cvar list. That erased the sectioned file the player
+    // edits, and because user_data_path is not a cvar, [Storage] vanished with
+    // it and saves silently moved to the platform folder on the next launch.
+    paths.config_path = exe_dir / "futari_cvars.ini";
     // Default the game data root to an "assets" folder next to the executable
     // when no --game_data_root was provided, so the game runs on a plain
     // double-click (no launcher .bat needed). An explicit --game_data_root
