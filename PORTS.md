@@ -47,10 +47,19 @@ into the `.app` so the shipped bundle needs no Homebrew.
 ## Releases
 
 One SemVer tag per release; per-OS zips are named
-`Mushihimesama-Futari-PC-vX.Y.Z.zip`, `-Deck-`, `-macOS-`. The repository stays
-code + tags: no GitHub Releases, and no game content anywhere in a bundle or a
-tag. Bundles are distributed separately, and not every platform is mirrored to
-every location — check before pointing someone at a link.
+`Mushihimesama-Futari-PC-vX.Y.Z.zip`, `-Deck-`, `-macOS-`. No game content goes
+into a bundle or a tag, ever.
+
+Each tag also gets a **GitHub Release carrying notes only** — no binaries
+attached. The release is the changelog entry people can link to; the bundles
+stay on the download share, because a release asset is the one place a bundle
+could be mirrored without anyone re-checking rule 2 first. Not every platform is
+mirrored to every location — check before pointing someone at a link.
+
+A tag must be an ancestor of `main`. If history is ever rewritten, re-point every
+tag at its counterpart commit and confirm the trees match before pushing:
+`git merge-base --is-ancestor <tag> main` is the check, and a release cut from an
+orphaned tag silently publishes a tree that is on no branch.
 
 Packaging rules — each one is here because it broke once:
 
