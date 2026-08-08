@@ -88,11 +88,14 @@ cp "$MVK" "$C/lib/libMoltenVK.dylib"
 # FFmpeg and libmspack (LGPL-2.1), and MoltenVK here is Apache-2.0. Fail the
 # build rather than ship a bundle with no licence text -- every macOS bundle
 # before this one shipped none.
-if [ ! -f THIRD-PARTY-NOTICES.txt ]; then
+# This script does not run from the repo root (every other path here is absolute
+# or $PROJ-relative), so resolve the checkout from the script's own location.
+REPO="${REPO:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+if [ ! -f "$REPO/THIRD-PARTY-NOTICES.txt" ]; then
   echo "  regenerating THIRD-PARTY-NOTICES.txt" >&2
-  SDK="$SDK" bash scripts/gen_third_party_notices.sh > THIRD-PARTY-NOTICES.txt
+  SDK="$SDK" bash "$REPO/scripts/gen_third_party_notices.sh" > "$REPO/THIRD-PARTY-NOTICES.txt"
 fi
-cp THIRD-PARTY-NOTICES.txt "$C/Resources/"
+cp "$REPO/THIRD-PARTY-NOTICES.txt" "$C/Resources/"
 MVK_LIC="$(dirname "$MVK")/../share/doc/molten-vk/LICENSE"
 [ -f "$MVK_LIC" ] || MVK_LIC="$(brew --prefix molten-vk 2>/dev/null)/LICENSE"
 if [ -f "$MVK_LIC" ]; then
