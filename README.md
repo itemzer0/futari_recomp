@@ -190,7 +190,7 @@ The contents of this repository — the host app, the tooling, the codegen input
 the build files, and the docs — are under the
 [BSD 3-Clause licence](LICENSE), matching the SDK's own licence and the Xenia
 lineage behind it. That licence covers **this repository only**; it grants no
-rights whatsoever to the game, or to the recompiled code generated from it. See
-[LICENSE](LICENSE) for the full scope.
+rights whatsoever to the game, or to the recompiled code generated from it.
+[NOTICE.md](NOTICE.md) spells out exactly what is and is not covered.
 
 Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
