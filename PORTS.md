@@ -61,6 +61,13 @@ tag at its counterpart commit and confirm the trees match before pushing:
 `git merge-base --is-ancestor <tag> main` is the check, and a release cut from an
 orphaned tag silently publishes a tree that is on no branch.
 
+One known exception: `main` begins at v1.3.0, because the identity-scrub rewrite
+dropped the 41 commits before it. **`v1.0.0`–`v1.1.0` therefore point into
+history that is no longer on any branch** — they are the only refs keeping those
+27 commits alive, and no counterpart exists on `main` to re-point them at. They
+resolve and fetch normally; they simply are not reachable from `main`. Everything
+from v1.3.1 on is.
+
 Packaging rules — each one is here because it broke once:
 
 1. **Stage into a fresh directory.** Don't repack the previous bundle in place; the
