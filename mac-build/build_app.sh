@@ -22,8 +22,8 @@ PROJ="${PROJ:-$HOME/Desktop/projects}"
 VER="${VER:-1.4.2}"
 BUILD="${BUILD:-$PROJ/futari-mac/futari_recomp/out/build/mac-arm64-release}"
 # SDK source tree. Its runtime dylibs land in $SDK/out/mac-arm64/.
-# The PINNED SUBMODULE WINS: builds link the submodule, so the bundle must ship
-# that same SDK's dylibs. $REXSDK_DIR is a persistent user-profile value pointing
+# THE VENDORED TREE WINS: builds link thirdparty/rexglue-sdk, so the bundle must
+# ship that same SDK's dylibs. $REXSDK_DIR is a persistent user-profile value pointing
 # at a shared sibling checkout for the OTHER ports, and honouring it here shipped
 # a v0.8.5.1 librexruntime.dylib next to a v0.9.3.1 futari in v1.4.1 -- the app
 # died at launch with "Symbol not found: __Z28FLAGS_metadata_root_storage_v".

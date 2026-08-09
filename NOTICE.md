@@ -34,6 +34,7 @@ The licence does NOT cover, and this project does not grant any rights to:
 
 ## Third-party components
 
-The ReXGlue SDK (`thirdparty/rexglue-sdk`) is a separate project under its own
-BSD 3-Clause licence, and is itself derived from the Xenia project
-(Copyright (c) 2022, Ben Vanik and Xenia project contributors).
+The ReXGlue SDK (`thirdparty/rexglue-sdk`) is a vendored copy of a separate
+project under its own BSD 3-Clause licence, itself derived from the Xenia
+project (Copyright (c) 2022, Ben Vanik and Xenia project contributors). See
+`thirdparty/rexglue-sdk/VENDORED.md` for its provenance.

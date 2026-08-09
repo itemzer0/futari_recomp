@@ -67,15 +67,18 @@ Needs CMake 3.25+, Ninja, **LLVM/clang-cl** 20+ (at `C:\Program Files\LLVM`),
 the MSVC ABI, so it needs those headers and libs — plus `rc.exe` from the bundled
 Windows SDK), Python 3.8+, and git + bash.
 
-The `thirdparty/rexglue-sdk` submodule points at
-[springah/rexglue-sdk](https://github.com/springah/rexglue-sdk), a fork of the
-[upstream SDK](https://github.com/rexglue/rexglue-sdk) pinned at **v0.9.3.1**.
-The fork carries the clang-cl and macOS fixes this port needs, some of which are
-not upstream yet; see [PORTS.md](PORTS.md#sdk).
+The SDK at `thirdparty/rexglue-sdk` is **vendored** — this port owns and
+maintains its own copy, taken from a fork of the
+[upstream SDK](https://github.com/rexglue/rexglue-sdk) at v0.9.3.1 and carrying
+the clang-cl and macOS fixes this port needs; see
+[thirdparty/rexglue-sdk/VENDORED.md](thirdparty/rexglue-sdk/VENDORED.md) and
+[PORTS.md](PORTS.md#sdk). Only the SDK's third-party dependencies are git
+submodules, all pointing at their public upstreams.
 
 ```sh
-# 1. Clone with the SDK submodule (pinned at a tagged release)
-git clone -c core.symlinks=true --recurse-submodules https://github.com/springah/futari_recomp
+# 1. Clone with the SDK's third-party submodules
+#    (--shallow-submodules skips ~1 GB of dependency history)
+git clone -c core.symlinks=true --recurse-submodules --shallow-submodules https://github.com/springah/futari_recomp
 cd futari_recomp
 
 # 2. Build the ReXGlue CLI
@@ -123,8 +126,9 @@ out/build/win-amd64/futari.exe --game_data_root assets
 - **Codegen runs per-module in isolation.** All 8 modes load at `0x88000000`, and
   the SDK analyzer corrupts cross-module analysis if they share one manifest.
   `regen.sh` already handles this; don't collapse it into a single codegen pass.
-- **The SDK pin.** Builds use the `thirdparty/rexglue-sdk` submodule at a tagged
-  release. Pass `-DREXSDK_DIR=<path>` to build against a live checkout instead.
+- **The SDK is vendored, not pinned.** Builds use the `thirdparty/rexglue-sdk`
+  tree in this repo. Pass `-DREXSDK_DIR=<path>` to build against a separate
+  checkout instead.
 - **`generated/` must exist before you configure.** `CMakeLists.txt` includes
   `generated/rexglue.cmake`, which step 4 produces. Configuring a fresh clone
   without running `scripts/regen.sh` first fails immediately, by design.
@@ -141,7 +145,7 @@ futari_functions.toml   # function-entry hints for the shell
 src/main.cpp            # host app: ReXApp subclass + futari.ini config
 scripts/                # extract_iso.py, analyse_xex.py, regen.sh
 dist/RUN.txt            # the readme that ships inside release zips
-thirdparty/rexglue-sdk/ # submodule — the SDK, pinned at a tagged release
+thirdparty/rexglue-sdk/ # the SDK, vendored (VENDORED.md); its deps are submodules
 ```
 
 ## Known issues

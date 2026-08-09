@@ -8,7 +8,7 @@ project(futari VERSION 1.4.2 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# SDK resolution: default to the pinned submodule when REXSDK_DIR isn't set
+# SDK resolution: default to the vendored SDK tree when REXSDK_DIR isn't set
 # (the presets pass $env{REXSDK_DIR}, which lands here as "" when unset).
 # Point REXSDK_DIR elsewhere to build against a live SDK checkout instead.
 if(NOT REXSDK_DIR AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rexglue-sdk/CMakeLists.txt")

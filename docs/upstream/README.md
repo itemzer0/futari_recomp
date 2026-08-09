@@ -1,9 +1,9 @@
 # Upstream notes
 
 Writeups aimed at the [ReXGlue SDK](https://github.com/rexglue/rexglue-sdk)
-rather than at this port. They are kept here because they are the reason the
-`thirdparty/rexglue-sdk` submodule points at a fork: each one describes a change
-this port depends on that upstream does not carry yet.
+rather than at this port. They are kept here because they describe changes the
+vendored `thirdparty/rexglue-sdk` tree carries that upstream does not — each one
+is a candidate to offer upstream.
 
 | Note | Status |
 |------|--------|

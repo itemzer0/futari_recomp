@@ -35,11 +35,11 @@ its own. Useful reports include:
   pipefail` and shellcheck-clean at error severity.
 - `scripts/regen.sh` output is not tracked. If a change alters codegen input
   (`*.toml`), say what you regenerated and what you observed in-game.
-- Recompiler and runtime bugs usually belong in the
-  [ReXGlue SDK](https://github.com/rexglue/rexglue-sdk), not here. This repo is
-  the host app, the codegen inputs, and the build; anything about how PowerPC
-  becomes C++, or how the runtime behaves, is upstream. When in doubt, open the
-  issue here and it can be moved.
+- Recompiler and runtime bugs live in the vendored SDK
+  (`thirdparty/rexglue-sdk`) and are fixed here, in-tree. Fixes that apply
+  beyond this port may also be offered to the
+  [upstream SDK](https://github.com/rexglue/rexglue-sdk) — drafts for that live
+  in [docs/upstream/](docs/upstream/).
 - By contributing you agree your changes are licensed under this repository's
   [BSD 3-Clause licence](LICENSE).
 

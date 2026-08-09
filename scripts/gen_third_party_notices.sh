@@ -10,12 +10,12 @@
 # lines of RUN.txt.
 #
 # Usage: scripts/gen_third_party_notices.sh [> THIRD-PARTY-NOTICES.txt]
-#        SDK=<path> overrides the SDK tree (default: the pinned submodule).
+#        SDK=<path> overrides the SDK tree (default: the vendored copy).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SDK="${SDK:-thirdparty/rexglue-sdk}"
-[ -f "$SDK/LICENSE" ] || { echo "ERROR: no SDK licence at $SDK/LICENSE (set SDK=<path>, or init the submodule)" >&2; exit 1; }
+[ -f "$SDK/LICENSE" ] || { echo "ERROR: no SDK licence at $SDK/LICENSE (set SDK=<path>)" >&2; exit 1; }
 
 # component | licence | upstream | path to licence text (relative to $SDK)
 COMPONENTS=(

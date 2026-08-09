@@ -15,7 +15,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# Default is the pinned submodule's Windows codegen binary, falling back to a
+# Default is the vendored SDK's Windows codegen binary, falling back to a
 # sibling rexglue-sdk checkout if you keep one next to this repo. Override with
 # REXGLUE=<path to rexglue> scripts/regen.sh — required on Linux/macOS, where
 # the binary is ./rexglue rather than rexglue.exe.

@@ -18,25 +18,28 @@ optimisation flags as the exe.
 
 ## SDK
 
-All builds link the `thirdparty/rexglue-sdk` submodule, pinned at a tagged release
-(currently **v0.9.3.1**), so every build records an SDK SHA. `-DREXSDK_DIR=<path>`
-overrides it with a live checkout.
+All builds link the `thirdparty/rexglue-sdk` tree, which is **vendored** — this
+port owns its SDK and takes fixes directly in-tree (see
+[thirdparty/rexglue-sdk/VENDORED.md](thirdparty/rexglue-sdk/VENDORED.md) for
+provenance: fork tag v0.9.3.1 and the documented deviations). Binaries stamp the
+version from the SDK's `VERSION` file. `-DREXSDK_DIR=<path>` overrides the
+vendored tree with a separate checkout.
 
-The submodule points at [springah/rexglue-sdk](https://github.com/springah/rexglue-sdk),
-a fork of [rexglue/rexglue-sdk](https://github.com/rexglue/rexglue-sdk). The fork
-carries the clang-cl build fixes and the macOS fixes this port depends on; two of
-the latter are written up in [docs/upstream/](docs/upstream/) and have not been
-offered upstream yet. Pointing `REXSDK_DIR` at an upstream checkout will miss
-them — expect the macOS path in particular to fail there.
+The vendored tree descends from springah/rexglue-sdk, a fork of
+[rexglue/rexglue-sdk](https://github.com/rexglue/rexglue-sdk), and carries the
+clang-cl build fixes and the macOS fixes this port depends on; two of the latter
+are written up in [docs/upstream/](docs/upstream/) and have not been offered
+upstream yet. Pointing `REXSDK_DIR` at an upstream checkout will miss them —
+expect the macOS path in particular to fail there.
 
-To bump the pin: tag an SDK release, then
-`git -C thirdparty/rexglue-sdk fetch --tags && git -C thirdparty/rexglue-sdk checkout vX.Y.Z`,
-and commit the gitlink.
+There is no pin to bump. To take an SDK change, apply it to the tree and commit
+it like any other change; when pulling a batch from the fork or upstream, diff
+against the recorded provenance tag and update `VERSION` + VENDORED.md.
 
 ⚠️ Check what a build directory is pinned to before shipping from it —
 `grep REXSDK_DIR out/build/<dir>/CMakeCache.txt`. A directory configured with an
-explicit `-DREXSDK_DIR` keeps pointing at that checkout, not the submodule, until
-it is reconfigured.
+explicit `-DREXSDK_DIR` keeps pointing at that checkout, not the vendored tree,
+until it is reconfigured.
 
 **macOS needs Homebrew LLVM.** The SDK's compiler gate rejects AppleClang by both
 ID and version, so the `mac-*` presets point at `/opt/homebrew/opt/llvm/bin/clang++`.
