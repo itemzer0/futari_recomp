@@ -96,10 +96,12 @@ function(rex_resolve_version out_var)
 
     # A vendored SDK tree has no git history of its own -- worse, running git
     # here inside a host repository would describe *that* repository's tags.
-    # A VERSION file at the source root (written when the tree was vendored)
-    # pins the version and short-circuits git entirely.
-    if(EXISTS "${ARG_SOURCE_DIR}/VERSION")
-        file(READ "${ARG_SOURCE_DIR}/VERSION" vendored_tag)
+    # A REXGLUE_VERSION file at the source root (written when the tree was
+    # vendored) pins the version and short-circuits git entirely. NOT named
+    # "VERSION": the SDK root is on the include path, and on case-insensitive
+    # filesystems (macOS) libc++ resolves `#include <version>` to that file.
+    if(EXISTS "${ARG_SOURCE_DIR}/REXGLUE_VERSION")
+        file(READ "${ARG_SOURCE_DIR}/REXGLUE_VERSION" vendored_tag)
         string(STRIP "${vendored_tag}" vendored_tag)
         rex_compute_version(result
             FLOOR_MAJOR ${ARG_FLOOR_MAJOR}

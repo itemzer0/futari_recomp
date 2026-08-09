@@ -22,8 +22,8 @@ All builds link the `thirdparty/rexglue-sdk` tree, which is **vendored** — thi
 port owns its SDK and takes fixes directly in-tree (see
 [thirdparty/rexglue-sdk/VENDORED.md](thirdparty/rexglue-sdk/VENDORED.md) for
 provenance: fork tag v0.9.3.1 and the documented deviations). Binaries stamp the
-version from the SDK's `VERSION` file. `-DREXSDK_DIR=<path>` overrides the
-vendored tree with a separate checkout.
+version from the SDK's `REXGLUE_VERSION` file. `-DREXSDK_DIR=<path>` overrides
+the vendored tree with a separate checkout.
 
 The vendored tree descends from springah/rexglue-sdk, a fork of
 [rexglue/rexglue-sdk](https://github.com/rexglue/rexglue-sdk), and carries the

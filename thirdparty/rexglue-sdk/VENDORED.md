@@ -21,10 +21,13 @@ list below describes only the vendoring commit itself.
   and redistributing prebuilt GPL binaries in a public source repo would carry a
   corresponding-source obligation. Restore it from the fork tag if the test
   pipeline is ever needed here.
-- **`VERSION` added** (contains the vendored tag). `cmake/rex_version.cmake` is
-  patched to read it before falling back to `git describe`: a vendored tree has
+- **`REXGLUE_VERSION` added** (contains the vendored tag). `cmake/rex_version.cmake`
+  is patched to read it before falling back to `git describe`: a vendored tree has
   no git history of its own, and `git describe` here would otherwise pick up the
-  *host* repository's tags (which hard-fails the version floor check).
+  *host* repository's tags (which hard-fails the version floor check). The file
+  is deliberately not named `VERSION` — the SDK root is on the include path, and
+  on case-insensitive filesystems (macOS) libc++ resolves C++20's
+  `#include <version>` to it, breaking every TU.
 - **Nested third-party dependencies stay git submodules**, now registered in the
   host repository's root `.gitmodules` at `thirdparty/rexglue-sdk/thirdparty/*`,
   pointing at their public upstreams. The SDK's own `.gitmodules` file is kept
