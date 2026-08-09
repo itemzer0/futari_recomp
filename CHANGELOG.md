@@ -3,7 +3,7 @@
 Versions are per-repo; each release is a tag, with per-OS zips on the download
 share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
-## Unreleased
+## v1.5.0 — 2026-08-09 (family & friends test round before going public)
 
 - **Bundles gain `gamecontrollerdb.txt`** — the community
   [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB)
