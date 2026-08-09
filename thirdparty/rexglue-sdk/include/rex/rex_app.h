@@ -116,6 +116,11 @@ class ReXApp : public ui::WindowedApp, public ui::WindowListener, public ui::Win
   /// Override to adjust game/user/update data paths programmatically.
   virtual void OnConfigurePaths(PathConfig& paths) { (void)paths; }
 
+  /// Called when the settings overlay's "Save to config" button is pressed.
+  /// Default: rex::cvar::SaveConfig(config_path). Override to merge the
+  /// modified cvars into an app-owned config file instead of the flat rewrite.
+  virtual void OnSaveSettings();
+
   /// Called after SetupPresentation returns (window and ImGui drawer are live)
   /// and before Runtime construction. Override to resolve paths from user
   /// input shown through an ImGui dialog.

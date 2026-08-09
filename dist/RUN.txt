@@ -32,7 +32,8 @@ CONTROLS
 
 SETTINGS
   Edit futari.ini (next to the exe) for resolution, fullscreen, vsync, upscaler,
-  and log level, then restart. Saves and shader cache default to Documents\futari;
+  and log level, then restart. The F4 overlay's "Save to config" writes into the
+  same futari.ini, updating those lines in place (your comments survive). Saves and shader cache default to Documents\futari;
   set user_data_path / cache_path in futari.ini to relocate them (a relative path
   like "saves" keeps everything next to the exe for a portable build).
 

@@ -79,8 +79,11 @@ bool IsCvarVisible(const rex::cvar::FlagEntry& entry, bool show_advanced) {
 
 namespace rex::ui {
 
-SettingsDialog::SettingsDialog(ImGuiDrawer* imgui_drawer, std::filesystem::path config_path)
-    : ImGuiDialog(imgui_drawer), config_path_(std::move(config_path)) {}
+SettingsDialog::SettingsDialog(ImGuiDrawer* imgui_drawer, std::filesystem::path config_path,
+                               std::function<void()> on_save)
+    : ImGuiDialog(imgui_drawer),
+      config_path_(std::move(config_path)),
+      on_save_(std::move(on_save)) {}
 
 SettingsDialog::~SettingsDialog() {}
 
@@ -715,8 +718,12 @@ void SettingsDialog::OnDraw(ImGuiIO& /*io*/) {
 
   // Bottom bar: Save / Reset-all, the config filename, and a restart hint.
   ImGui::Separator();
-  if (ImGui::Button("Save to config"))
-    rex::cvar::SaveConfig(config_path_);
+  if (ImGui::Button("Save to config")) {
+    if (on_save_)
+      on_save_();
+    else
+      rex::cvar::SaveConfig(config_path_);
+  }
   ImGui::SameLine();
   if (ImGui::Button("Reset all to defaults"))
     rex::cvar::ResetAllToDefaults();

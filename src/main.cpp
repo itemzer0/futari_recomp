@@ -10,6 +10,8 @@
 
 #include "generated/default/futari_init.h"
 
+#include "ini_merge.h"
+
 #include <rex/cvar.h>
 #include <rex/filesystem.h>
 #include <rex/logging.h>
@@ -25,10 +27,12 @@
 #include <filesystem>
 #include <fstream>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace {
 
@@ -173,9 +177,10 @@ void WriteDefaultIni(const std::filesystem::path& path) {
   }
   file << "# Mushihimesama Futari (recompiled) PC settings\n"
        << "# Edit this file, then restart the game. Values shown are the defaults.\n"
-       << "# This file is yours: the game only reads it. The in-game settings\n"
-       << "# overlay saves to futari_cvars.ini instead, so it cannot overwrite\n"
-       << "# what you put here.\n"
+       << "# The in-game settings overlay (F4 -> \"Save to config\") saves into this\n"
+       << "# same file: it updates the settings lines in place and keeps your\n"
+       << "# comments. Overlay settings with no line here go into a marked block\n"
+       << "# at the top of the file.\n"
        << "\n"
        << "[Display]\n"
        << "# Window size as WxH. The game opens windowed at this size; the guest\n"
@@ -305,6 +310,116 @@ void LoadFutariIni(const std::filesystem::path& exe_dir, rex::PathConfig& paths)
   }
 }
 
+std::string GetCvarByName(std::string_view name) {
+  for (const auto& entry : rex::cvar::GetRegistry()) {
+    if (entry.name == name && entry.getter) {
+      return entry.getter();
+    }
+  }
+  return {};
+}
+
+// "60.000000" -> "60", "0.500000" -> "0.5"; integers pass through unchanged.
+std::string TidyNumber(std::string text) {
+  if (text.find('.') == std::string::npos) {
+    return text;
+  }
+  while (!text.empty() && text.back() == '0') {
+    text.pop_back();
+  }
+  if (!text.empty() && text.back() == '.') {
+    text.pop_back();
+  }
+  return text;
+}
+
+// The overlay's "Save to config" (F4). Writes futari.ini itself, but as a
+// merge, not the SDK's flat rewrite: the friendly section lines the player
+// edits are updated in place (comments intact, [Storage] untouched), and any
+// other overlay-modified cvars go into a delimited top-level block that the
+// SDK's LoadConfig reads back on the next launch.
+void SaveFutariIni(const std::filesystem::path& exe_dir) {
+  const std::filesystem::path ini_path = exe_dir / "futari.ini";
+  WriteDefaultIni(ini_path);  // ensure the sectioned skeleton exists
+
+  std::string original;
+  {
+    std::ifstream in(ini_path, std::ios::binary);
+    if (in) {
+      std::ostringstream buf;
+      buf << in.rdbuf();
+      original = buf.str();
+    }
+  }
+
+  // Friendly lines: the reverse of the LoadFutariIni mapping above.
+  const std::vector<ini_merge::SectionUpdate> updates = {
+      {"Display", "resolution", GetCvarByName("window_width") + "x" + GetCvarByName("window_height")},
+      {"Display", "fullscreen", GetCvarByName("fullscreen")},
+      {"Display", "vsync", GetCvarByName("vsync")},
+      {"Display", "refresh_rate", TidyNumber(GetCvarByName("video_mode_refresh_rate"))},
+      {"Display", "letterbox", GetCvarByName("present_letterbox")},
+      {"Graphics", "upscaler", GetCvarByName("present_effect")},
+      {"Graphics", "cas_sharpness", TidyNumber(GetCvarByName("present_cas_additional_sharpness"))},
+      {"Graphics", "dither", GetCvarByName("present_dither")},
+      {"Diagnostics", "log_level", GetCvarByName("log_level")},
+  };
+
+  // Everything else the overlay changed goes into the managed block -- except
+  // cvars the friendly lines above already carry, and the ones OnConfigurePaths
+  // / OnPreSetup derive or pin every boot (machine-local paths, forced values):
+  // persisting those is dead weight at best and breaks portability at worst.
+  static constexpr std::string_view kExcluded[] = {
+      // carried by the friendly section lines
+      "window_width", "window_height", "fullscreen", "vsync",
+      "video_mode_refresh_rate", "present_letterbox", "present_effect",
+      "present_cas_additional_sharpness", "present_dither", "log_level",
+      // pinned in OnPreSetup or derived from PathConfig at startup
+      "license_mask", "mnk_mode", "mnk_mouse_capture", "gpu_plugin",
+      "game_data_root", "user_data_root", "cache_root", "update_data_root",
+      "metadata_root"};
+
+  std::string raw_block;
+  {
+    std::istringstream all(rex::cvar::SerializeToTOML());  // "name = value" per modified flag
+    std::string line;
+    while (std::getline(all, line)) {
+      const size_t eq = line.find('=');
+      if (eq == std::string::npos) {
+        continue;
+      }
+      const std::string key = Trim(std::string_view(line).substr(0, eq));
+      const bool excluded = std::any_of(std::begin(kExcluded), std::end(kExcluded),
+                                        [&](std::string_view e) { return e == key; });
+      if (!excluded) {
+        raw_block += line;
+        raw_block += '\n';
+      }
+    }
+  }
+
+  const std::string merged = ini_merge::Merge(original, updates, raw_block);
+
+  // Write via a sibling temp file + rename so a crash mid-write cannot leave a
+  // truncated futari.ini (the exact failure mode this save path used to have).
+  const std::filesystem::path tmp_path = exe_dir / "futari.ini.tmp";
+  {
+    std::ofstream out(tmp_path, std::ios::binary | std::ios::trunc);
+    if (!out) {
+      REXLOG_ERROR("Settings save: cannot open {}", tmp_path.string());
+      return;
+    }
+    out << merged;
+  }
+  std::error_code ec;
+  std::filesystem::rename(tmp_path, ini_path, ec);
+  if (ec) {
+    REXLOG_ERROR("Settings save: rename to {} failed: {}", ini_path.string(), ec.message());
+    return;
+  }
+  REXLOG_INFO("Settings saved to {}", ini_path.string());
+}
+
 }  // namespace
 
 class FutariApp : public rex::ReXApp {
@@ -319,13 +434,22 @@ class FutariApp : public rex::ReXApp {
   void OnConfigurePaths(rex::PathConfig& paths) override {
     const auto exe_dir = rex::filesystem::GetExecutableFolder();
     LoadFutariIni(exe_dir, paths);
-    // Give the SDK its own cvar file. It defaults config_path to
-    // <exe_dir>/futari.ini (rex_app.cpp) -- the very file parsed above -- and
-    // the settings overlay's "Save to config" (F4) writes it with a truncating
-    // stream as a flat cvar list. That erased the sectioned file the player
-    // edits, and because user_data_path is not a cvar, [Storage] vanished with
-    // it and saves silently moved to the platform folder on the next launch.
-    paths.config_path = exe_dir / "futari_cvars.ini";
+    // One config file. config_path points at futari.ini itself: the SDK's
+    // LoadConfig reads only top-level (unsectioned) lines -- i.e. the managed
+    // overlay block -- while the sections were parsed above by LoadFutariIni.
+    // F4 "Save to config" routes through OnSaveSettings below, which merges
+    // into this file instead of the SDK's truncating flat rewrite (the
+    // v1.4.2-era split into a separate futari_cvars.ini is retired).
+    paths.config_path = exe_dir / "futari.ini";
+    // One-time migration: load a leftover futari_cvars.ini (its values are
+    // superseded by futari.ini's overlay block once the next F4 save runs),
+    // then park it as .bak so it stops shadowing the single-file world.
+    const std::filesystem::path legacy_cvars = exe_dir / "futari_cvars.ini";
+    if (std::filesystem::exists(legacy_cvars)) {
+      rex::cvar::LoadConfig(legacy_cvars);
+      std::error_code ec;
+      std::filesystem::rename(legacy_cvars, exe_dir / "futari_cvars.ini.bak", ec);
+    }
     // Default the game data root to an "assets" folder next to the executable
     // when no --game_data_root was provided, so the game runs on a plain
     // double-click (no launcher .bat needed). An explicit --game_data_root
@@ -333,6 +457,10 @@ class FutariApp : public rex::ReXApp {
     if (paths.game_data_root.empty()) {
       paths.game_data_root = exe_dir / "assets";
     }
+  }
+
+  void OnSaveSettings() override {
+    SaveFutariIni(rex::filesystem::GetExecutableFolder());
   }
 
   void OnPreSetup(rex::RuntimeConfig& config) override {

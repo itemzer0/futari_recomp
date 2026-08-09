@@ -11,6 +11,7 @@
  */
 #pragma once
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <rex/ui/imgui_dialog.h>
 
@@ -22,8 +23,13 @@ namespace rex::ui {
 
 class SettingsDialog : public ImGuiDialog {
  public:
-  // config_path: where "Save to config" writes (e.g. exe_dir / "app.toml")
-  SettingsDialog(ImGuiDrawer* imgui_drawer, std::filesystem::path config_path);
+  // config_path: where "Save to config" writes (e.g. exe_dir / "app.toml").
+  // on_save: optional replacement for the save action -- when set, the Save
+  // button invokes it instead of rex::cvar::SaveConfig(config_path), so an app
+  // can merge the modified cvars into its own config file format. config_path
+  // is still shown as the save destination in the dialog's bottom bar.
+  SettingsDialog(ImGuiDrawer* imgui_drawer, std::filesystem::path config_path,
+                 std::function<void()> on_save = {});
   ~SettingsDialog();
 
  protected:
@@ -41,6 +47,7 @@ class SettingsDialog : public ImGuiDialog {
   void DrawKeybindRow(const rex::cvar::FlagEntry& entry);
 
   std::filesystem::path config_path_;
+  std::function<void()> on_save_;
   char search_buf_[128] = {};
   std::string selected_category_;
   std::string capturing_bind_name_;

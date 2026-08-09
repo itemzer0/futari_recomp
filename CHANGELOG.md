@@ -3,6 +3,21 @@
 Versions are per-repo; each release is a tag, with per-OS zips on the download
 share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
+## Unreleased
+
+- **The SDK is vendored.** `thirdparty/rexglue-sdk` is no longer a submodule
+  pointing at a private fork — the tree itself is in the repo, taken verbatim
+  from the fork at v0.9.3.1 (see `thirdparty/rexglue-sdk/VENDORED.md` for the
+  documented deviations). A public clone now resolves every dependency.
+- **One ini again.** v1.4.2 split the overlay's save target into
+  `futari_cvars.ini` because the SDK's save was a truncating flat rewrite. The
+  save now goes through a merge writer: F4's "Save to config" updates the
+  friendly lines in `futari.ini` in place (comments and `[Storage]` intact) and
+  keeps any other overlay-modified cvars in a marked block at the top of the
+  file. A leftover `futari_cvars.ini` is loaded once at startup and parked as
+  `.bak`. The write is temp-file + rename, so a crash mid-save cannot truncate
+  the file.
+
 ## v1.4.2 — 2026-08-08 (source release; no new bundles yet)
 
 A pre-publication pass over the repository. No renderer or game-logic changes, so

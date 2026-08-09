@@ -9,6 +9,10 @@ This port maintains its own SDK from here: fixes land in this tree directly and
 are cherry-picked to/from the fork or upstream when they apply. There is no pin
 to bump — the tree *is* the SDK.
 
+Changes made *after* vendoring are ordinary commits in this repository's
+history — `git log -- thirdparty/rexglue-sdk` is the authoritative record. The
+list below describes only the vendoring commit itself.
+
 ## Deviations from the v0.9.3.1 tag
 
 - **`tools/binutils/` is dropped** (~130 MB of prebuilt Windows PowerPC binutils

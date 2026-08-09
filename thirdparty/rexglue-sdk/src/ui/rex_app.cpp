@@ -421,7 +421,8 @@ void ReXApp::SetupOverlays(rex::ui::Presenter* presenter, rex::ui::ImmediateDraw
     if (settings_overlay_) {
       settings_overlay_.reset();
     } else {
-      settings_overlay_ = std::make_unique<ui::SettingsDialog>(imgui_drawer_.get(), config_path_);
+      settings_overlay_ = std::make_unique<ui::SettingsDialog>(imgui_drawer_.get(), config_path_,
+                                                               [this] { OnSaveSettings(); });
     }
   });
   rex::ui::RegisterBind("bind_achievements", "F7", "Toggle achievements overlay", [this] {
@@ -447,6 +448,10 @@ void ReXApp::SetupOverlays(rex::ui::Presenter* presenter, rex::ui::ImmediateDraw
   }
 
   OnCreateDialogs(imgui_drawer_.get());
+}
+
+void ReXApp::OnSaveSettings() {
+  rex::cvar::SaveConfig(config_path_);
 }
 
 void ReXApp::LaunchModule() {
