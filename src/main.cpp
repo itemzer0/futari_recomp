@@ -352,18 +352,31 @@ void SaveFutariIni(const std::filesystem::path& exe_dir) {
     }
   }
 
-  // Friendly lines: the reverse of the LoadFutariIni mapping above.
-  const std::vector<ini_merge::SectionUpdate> updates = {
-      {"Display", "resolution", GetCvarByName("window_width") + "x" + GetCvarByName("window_height")},
-      {"Display", "fullscreen", GetCvarByName("fullscreen")},
-      {"Display", "vsync", GetCvarByName("vsync")},
-      {"Display", "refresh_rate", TidyNumber(GetCvarByName("video_mode_refresh_rate"))},
-      {"Display", "letterbox", GetCvarByName("present_letterbox")},
-      {"Graphics", "upscaler", GetCvarByName("present_effect")},
-      {"Graphics", "cas_sharpness", TidyNumber(GetCvarByName("present_cas_additional_sharpness"))},
-      {"Graphics", "dither", GetCvarByName("present_dither")},
-      {"Diagnostics", "log_level", GetCvarByName("log_level")},
+  // Friendly lines: the reverse of the LoadFutariIni mapping above. A cvar
+  // that is absent from this build (e.g. present_cas_additional_sharpness only
+  // exists in FidelityFX-enabled builds) yields an empty string -- skip it so
+  // the player's line is left alone rather than blanked.
+  std::vector<ini_merge::SectionUpdate> updates;
+  const auto add = [&](const char* section, const char* key, std::string value) {
+    if (!value.empty()) {
+      updates.push_back({section, key, std::move(value)});
+    }
   };
+  {
+    const std::string w = GetCvarByName("window_width");
+    const std::string h = GetCvarByName("window_height");
+    if (!w.empty() && !h.empty()) {
+      add("Display", "resolution", w + "x" + h);
+    }
+  }
+  add("Display", "fullscreen", GetCvarByName("fullscreen"));
+  add("Display", "vsync", GetCvarByName("vsync"));
+  add("Display", "refresh_rate", TidyNumber(GetCvarByName("video_mode_refresh_rate")));
+  add("Display", "letterbox", GetCvarByName("present_letterbox"));
+  add("Graphics", "upscaler", GetCvarByName("present_effect"));
+  add("Graphics", "cas_sharpness", TidyNumber(GetCvarByName("present_cas_additional_sharpness")));
+  add("Graphics", "dither", GetCvarByName("present_dither"));
+  add("Diagnostics", "log_level", GetCvarByName("log_level"));
 
   // Everything else the overlay changed goes into the managed block -- except
   // cvars the friendly lines above already carry, and the ones OnConfigurePaths
