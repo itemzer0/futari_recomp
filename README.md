@@ -78,8 +78,10 @@ submodules, all pointing at their public upstreams.
 ```sh
 # 1. Clone with the SDK's third-party submodules (~1 GB of dependency history;
 #    do NOT add --shallow-submodules — several pins are not branch tips, and a
-#    shallow clone silently leaves those submodules on the wrong commit)
-git clone -c core.symlinks=true -c core.longpaths=true --recurse-submodules https://github.com/springah/futari_recomp
+#    shallow clone silently leaves those submodules on the wrong commit).
+#    The -c options go BEFORE `clone` so they reach the submodule clones too —
+#    `git clone -c ...` only configures the parent repo.
+git -c core.symlinks=true -c core.longpaths=true clone --recurse-submodules https://github.com/springah/futari_recomp
 cd futari_recomp
 
 # 2. Build the ReXGlue CLI
@@ -114,7 +116,7 @@ out/build/win-amd64/futari.exe --game_data_root assets
 - **clang-cl, not clang++.** This builds against the MSVC ABI. The CMake presets
   default to `clang++`, which is why the configure line above is explicit — and why
   Windows releases don't come from a preset.
-- **`-c core.symlinks=true` on clone matters.** The SDK's libmspack submodule uses
+- **`git -c core.symlinks=true` (before `clone`) matters.** The SDK's libmspack submodule uses
   git symlinks. Without it (plus Developer Mode), those files check out as text
   stubs and the SDK build fails with `lzxd.c(1,1): error: expected identifier`. Fix
   an affected checkout with `git -C <submodule> config core.symlinks true`, then
