@@ -76,9 +76,10 @@ the clang-cl and macOS fixes this port needs; see
 submodules, all pointing at their public upstreams.
 
 ```sh
-# 1. Clone with the SDK's third-party submodules
-#    (--shallow-submodules skips ~1 GB of dependency history)
-git clone -c core.symlinks=true --recurse-submodules --shallow-submodules https://github.com/springah/futari_recomp
+# 1. Clone with the SDK's third-party submodules (~1 GB of dependency history;
+#    do NOT add --shallow-submodules — several pins are not branch tips, and a
+#    shallow clone silently leaves those submodules on the wrong commit)
+git clone -c core.symlinks=true -c core.longpaths=true --recurse-submodules https://github.com/springah/futari_recomp
 cd futari_recomp
 
 # 2. Build the ReXGlue CLI
