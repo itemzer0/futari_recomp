@@ -87,7 +87,11 @@ Packaging rules — each one is here because it broke once:
 2. **A public bundle carries no game data.** Ship the exe, the 8 module DLLs, the
    SDK runtime + GPU plugin, `icon1.ico`, `icon2.ico`, `futari.ini`,
    `extract_assets.bat` + `extract_iso.py` (so the user can populate `assets/`
-   themselves), `RUN.txt` copied from [`dist/RUN.txt`](dist/RUN.txt), and
+   themselves), `RUN.txt` copied from [`dist/RUN.txt`](dist/RUN.txt),
+   `gamecontrollerdb.txt` copied from
+   [`dist/gamecontrollerdb.txt`](dist/gamecontrollerdb.txt) (SDL's community
+   gamepad-mapping database — the SDL input driver loads it from beside the exe
+   for pads SDL doesn't know natively), and
    [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt). An empty `dlc/` with its
    `README.txt` is fine; the packages themselves are not. `assets/` and `dlc/`
    contents are the game — they never go in a bundle that leaves your machine.

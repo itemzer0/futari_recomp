@@ -17,7 +17,8 @@ cd "$(dirname "$0")/.."
 SDK="${SDK:-thirdparty/rexglue-sdk}"
 [ -f "$SDK/LICENSE" ] || { echo "ERROR: no SDK licence at $SDK/LICENSE (set SDK=<path>)" >&2; exit 1; }
 
-# component | licence | upstream | path to licence text (relative to $SDK)
+# component | licence | upstream | path to licence text (relative to $SDK,
+# falling back to repo-relative for components that ship from this repo's dist/)
 COMPONENTS=(
   "ReXGlue SDK (rexruntime, GPU plugin; incl. Xenia-derived portions)|BSD-3-Clause|https://github.com/rexglue/rexglue-sdk|LICENSE"
   "FFmpeg (libavcodec, libavutil -- LGPL build, CONFIG_GPL=0)|LGPL-2.1-or-later|https://ffmpeg.org|thirdparty/FFmpeg/COPYING.LGPLv2.1"
@@ -43,6 +44,7 @@ COMPONENTS=(
   "Vulkan Memory Allocator|MIT|https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator|thirdparty/vulkan-memory-allocator/LICENSE.txt"
   "volk|MIT|https://github.com/zeux/volk|thirdparty/volk/LICENSE.md"
   "DES implementation|see text|(vendored in the SDK)|thirdparty/crypto/des/LICENSE"
+  "SDL_GameControllerDB (gamecontrollerdb.txt data file)|Zlib|https://github.com/mdqinc/SDL_GameControllerDB|dist/gamecontrollerdb.LICENSE"
 )
 
 # Components linked by the SDK that vendor no licence file. Named rather than
@@ -111,6 +113,8 @@ emit() {
     echo
     if [ -f "$SDK/$path" ]; then
       cat "$SDK/$path"
+    elif [ -f "$path" ]; then
+      cat "$path"
     else
       echo "  [licence text not found at $path in the SDK tree -- see $url]"
       missing=$((missing + 1))

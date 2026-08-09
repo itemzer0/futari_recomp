@@ -5,6 +5,14 @@ share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
 ## Unreleased
 
+- **Bundles gain `gamecontrollerdb.txt`** — the community
+  [SDL_GameControllerDB](https://github.com/mdqinc/SDL_GameControllerDB)
+  (Zlib licence, snapshot `629ccc7`, 2,254 mappings, tracked at
+  `dist/gamecontrollerdb.txt`). The SDL input driver loads it from beside the
+  exe, adding recognition for gamepads SDL3 doesn't know natively, and the
+  startup warning about the file being absent goes away. Listed in
+  THIRD-PARTY-NOTICES.txt.
+
 - **The SDK is vendored.** `thirdparty/rexglue-sdk` is no longer a submodule
   pointing at a private fork — the tree itself is in the repo, taken verbatim
   from the fork at v0.9.3.1 (see `thirdparty/rexglue-sdk/VENDORED.md` for the
