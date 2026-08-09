@@ -1,0 +1,83 @@
+name: Tests
+
+# Build with REXGLUE_BUILD_TESTS=ON and run the Catch2 suite (unit + PPC
+# instruction tests) via ctest. Runs NIGHTLY + on manual dispatch: a full
+# from-scratch SDK build on the 2-core runner takes ~50-70 min, so gating every
+# push on it is impractical; nightly keeps it non-blocking and dispatch lets you
+# verify a specific ref on demand. The PPC toolchain is vendored in tools/binutils.
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    name: Build & run tests (linux-amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install clang 20
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget gnupg lsb-release
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20
+          sudo apt-get install -y clang-20 lld-20
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-20 200
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-20 200
+
+      - name: Install build deps
+        run: |
+          wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-noble.list http://packages.lunarg.com/vulkan/lunarg-vulkan-noble.list
+          sudo apt update
+          sudo apt install -y cmake ninja-build build-essential git curl unzip autoconf python3.12-venv \
+            libgtk-3-dev libx11-xcb-dev libxss-dev wine vulkan-sdk \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev
+
+      # sccache is a build-speed optimization, not a correctness requirement.
+      # The action downloads the sccache release binary from GitHub, which can
+      # flake on a transient network blip / API rate-limit. Don't let that fail
+      # the whole run -- mark it non-fatal and degrade to an uncached build
+      # (see the conditional launcher flags in "Configure" below).
+      - name: Set up sccache
+        id: sccache
+        continue-on-error: true
+        uses: hendrikmuhs/ccache-action@v1.2.22
+        with:
+          variant: sccache
+          key: tests-linux-amd64
+
+      - name: Set compilers
+        run: |
+          echo "CC=clang-20" >> $GITHUB_ENV
+          echo "CXX=clang++-20" >> $GITHUB_ENV
+
+      - name: Configure (tests enabled)
+        run: |
+          launcher=()
+          if command -v sccache >/dev/null 2>&1; then
+            echo "sccache available -> enabling compiler-cache launcher"
+            launcher=(-DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache)
+          else
+            echo "::warning::sccache unavailable (setup outcome=${{ steps.sccache.outcome }}); building without compiler cache"
+          fi
+          cmake --preset linux-amd64 \
+            -DREXGLUE_BUILD_TESTS=ON \
+            "${launcher[@]}"
+
+      - name: Build (incl. unit + PPC tests)
+        run: cmake --build out/build/linux-amd64 --parallel
+
+      - name: sccache stats
+        if: always()
+        run: sccache --show-stats || true
+
+      - name: Run tests
+        run: ctest --test-dir out/build/linux-amd64 --output-on-failure --parallel

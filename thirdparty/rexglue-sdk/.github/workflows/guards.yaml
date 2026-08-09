@@ -1,0 +1,60 @@
+name: Guards
+
+# Cheap static guards that need no build: shell-script linting and a commit
+# identity check. Complements lint.yaml (clang-format) and tests.yaml (Catch2).
+on: [pull_request, push]
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Lint tracked shell scripts (excluding vendored thirdparty)
+        run: |
+          mapfile -t scripts < <(git ls-files '*.sh' '*.bash' | grep -vE '^thirdparty/' || true)
+          if [ "${#scripts[@]}" -eq 0 ]; then
+            echo "no tracked shell scripts to lint"; exit 0
+          fi
+          printf 'linting %d script(s):\n' "${#scripts[@]}"
+          printf '  %s\n' "${scripts[@]}"
+          # error-severity only: catches real breakage (syntax, bad heredocs)
+          # without failing CI on pre-existing style nits. Tighten later per repo.
+          shellcheck --severity=error "${scripts[@]}"
+
+  identity:
+    name: Commit identity (springah/noreply)
+    runs-on: ubuntu-latest
+    steps:
+      # On pull_request events the default checkout is GitHub's synthetic merge
+      # commit (committer noreply@github.com, author the PR opener's public
+      # email), which can never satisfy this guard. Check out the real PR head
+      # commit instead; on push events github.event.pull_request is empty so we
+      # fall back to the pushed SHA.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Reject non-springah author/committer on HEAD
+        run: |
+          # Merge commits are mechanical, not authored content: the GitHub
+          # "Merge" button stamps them with the merging user's public email as
+          # author and noreply@github.com as committer, neither guaranteed to be
+          # the springah noreply. Exempt them (parent count > 1) and only police
+          # the identity of real content commits.
+          if [ "$(git rev-list --no-walk --count --merges HEAD)" -eq 1 ]; then
+            echo "identity OK: HEAD is a merge commit (exempt)"
+            exit 0
+          fi
+          ok_springah="321120+springah@users.noreply.github.com"
+          fail=0
+          for role in ae ce; do
+            e="$(git log -1 --format="%${role}")"
+            if [ "$e" != "$ok_springah" ]; then
+              echo "::error::HEAD ${role} email '$e' is not $ok_springah"
+              fail=1
+            fi
+          done
+          [ "$fail" -eq 0 ] && echo "identity OK: $ok_springah"
+          exit $fail

@@ -1,8 +1,12 @@
 assets/
 dlc/
 generated/
-private/
+# Anchored: the vendored SDK tracks scripts/PSReX/Private/, which an
+# unanchored rule would swallow on a case-insensitive filesystem.
+/private/
 out/
+# The vendored SDK's own untracked build tree (the SDK never ignored it itself).
+/thirdparty/rexglue-sdk/build/
 *.user
 .vs/
 CMakeSettings.json
