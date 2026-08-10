@@ -3,11 +3,12 @@
 Versions are per-repo; each release is a tag, with per-OS zips on the download
 share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
-## v1.5.1 — 2026-08-11 (source release; no new bundles yet)
+## v1.5.1 — 2026-08-11 (Windows, macOS, Steam Deck)
 
 Extraction tooling and the macOS tag fix, cut mid-test-week for further testing.
-No renderer or game-logic changes — the v1.5.0 bundles remain current for
-players, though their bundled extractor carries the ISO bug fixed below.
+No renderer or game-logic changes. Bundles were restaged from this tag on all
+three platforms the same day; the Windows and Deck bundles now carry the
+extraction tooling so the dump-your-own-copy route can be tested from them.
 
 - **The extractor now reads console disc installs directly — no god2iso, no
   Velocity.** Dumping your own copy is now: install the disc on the console,

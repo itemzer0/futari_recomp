@@ -35,6 +35,15 @@ TESTING - WHAT TO REPORT
   setting that doesn't stick. Send the newest file from logs\ with a line or
   two about what you were doing. Playing normally for a while IS the test.
 
+NEW THIS ROUND - EXTRACTION TOOLING (v1.5.1)
+  extract_assets.bat + extract_iso.py are now included: the tools a public
+  user will use to dump their own copy. Drag a disc ISO onto the .bat - or
+  the game's install folder copied off a console (the 435A07D7 folder; that
+  route verifies the copy and installs DLC too). This build already includes
+  the game data, so you don't need to run it - but if you have a dump handy,
+  trying the drag-and-drop and reporting how it goes is a useful test. It
+  writes into assets\ and dlc\ next to the .bat (needs Python 3).
+
 LICENCES
   This build links third-party open-source components (including FFmpeg and
   libmspack under the LGPL-2.1). Their licences, and the LGPL's written offer of
