@@ -3,7 +3,11 @@
 Versions are per-repo; each release is a tag, with per-OS zips on the download
 share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
-## Unreleased
+## v1.5.2 — 2026-08-11 (source release; bundles remain v1.5.1)
+
+Clears the README's last known issue. Shell-only change — the v1.5.1 bundles
+stay current for the test week, since the affected path was never observed
+executing.
 
 - **The shell's only codegen fatal is gone.** The README's one known issue —
   the split block at `0x82081778` whose branch back into `sub_82081658`'s loop
