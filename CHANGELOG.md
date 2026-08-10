@@ -3,7 +3,11 @@
 Versions are per-repo; each release is a tag, with per-OS zips on the download
 share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
-## v1.5.1 — unreleased
+## v1.5.1 — 2026-08-11 (source release; no new bundles yet)
+
+Extraction tooling and the macOS tag fix, cut mid-test-week for further testing.
+No renderer or game-logic changes — the v1.5.0 bundles remain current for
+players, though their bundled extractor carries the ISO bug fixed below.
 
 - **The extractor now reads console disc installs directly — no god2iso, no
   Velocity.** Dumping your own copy is now: install the disc on the console,
