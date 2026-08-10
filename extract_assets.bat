@@ -2,10 +2,16 @@
 rem ===========================================================================
 rem  Mushihimesama Futari (recompiled) - asset extractor
 rem
-rem  Drag your Xbox 360 disc ISO onto this file, or just double-click it when an
-rem  .iso is sitting in this same folder. It extracts default.xex and the game
-rem  modules into "assets\" next to futari.exe, which is where the game looks by
-rem  default - after this, futari.exe runs on a plain double-click.
+rem  Drag either of these onto this file:
+rem    - your Xbox 360 disc ISO, or
+rem    - the game folder copied off your console's storage (the "435A07D7"
+rem      folder, or anything above it) - this also installs your DLC, and the
+rem      copy is verified against the console's own integrity hashes first.
+rem  Or just double-click it when an .iso is sitting in this same folder.
+rem
+rem  It extracts default.xex and the game modules into "assets\" next to
+rem  futari.exe (and DLC packages into "dlc\"), which is where the game looks
+rem  by default - after this, futari.exe runs on a plain double-click.
 rem
 rem  Requires Python 3 (https://www.python.org/downloads/). This is a thin
 rem  wrapper around scripts\extract_iso.py.
@@ -42,21 +48,23 @@ if not defined PY (
 
 echo.
 if "%~1"=="" (
-    echo No ISO was dragged on - looking for a .iso in this folder...
+    echo Nothing was dragged on - looking for a .iso in this folder...
+    echo ^(You can also drag on your disc ISO, or the game folder copied off
+    echo your console - see docs\DUMPING.md.^)
 ) else (
     echo Extracting from: %~1
 )
-echo Output folder:   %~dp0assets
+echo Output folders:  %~dp0assets  and  %~dp0dlc
 echo.
 
-%PY% "%EXTRACTOR%" %1 --out "%~dp0assets"
+%PY% "%EXTRACTOR%" %1 --out "%~dp0assets" --dlc-out "%~dp0dlc"
 set "RC=%errorlevel%"
 
 echo.
 if not "%RC%"=="0" (
     echo [FAILED] Extraction did not complete - see the messages above.
 ) else (
-    echo [DONE] Assets are in the "assets" folder. You can now run futari.exe.
+    echo [DONE] See the summary above. You can now run futari.exe.
 )
 
 :end

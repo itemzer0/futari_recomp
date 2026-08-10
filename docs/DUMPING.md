@@ -25,43 +25,51 @@ that there isn't one, and carries on — Ver. 1.5 is already the final revision.
   formatted by the console** that you copy content onto from the dashboard
   (*Settings → System → Storage*).
 - On the PC: [FATXplorer](https://fatxplorer.eaton-works.com/) to browse FATX
-  storage, [Velocity](https://github.com/Gualdimar/Velocity) to inspect STFS
-  packages, and `god2iso` if you're pulling a disc install (see below).
+  storage. That's it — the extractor here reads the console's own formats
+  directly, so no conversion tools are needed.
 
 ## Route A — the game installed on the console (easiest)
 
 Install the disc to the console first (*Settings → System → Storage → select your
-disc → Install*). A disc install is stored as a **Games on Demand (GoD/SVOD)
-container**, not a plain file, under:
+disc → Install*). The install — and any marketplace DLC bought on the console —
+lives under one folder named after the game's title ID:
 
 ```
-Content\0000000000000000\435A07D7\00007000\
+Content\0000000000000000\435A07D7\
+├── 00007000\   the installed disc (a "Games on Demand" container)
+└── 00000002\   the marketplace DLC packages, if you have them
 ```
 
 1. Connect the console's drive (or the USB stick you copied the install onto) to
    your PC and open it in FATXplorer.
-2. Copy that `00007000` folder out to your PC.
-3. Convert the container to an ISO with `god2iso`.
-4. Extract the ISO into `assets/`:
+2. Copy the whole `435A07D7` folder out to your PC.
+3. Drag that folder onto `extract_assets.bat` — or run:
 
    ```sh
-   python scripts/extract_iso.py "Futari.iso" --out assets/
+   python scripts/extract_iso.py "path/to/435A07D7" --out assets/ --dlc-out dlc/
    ```
 
-   On Windows you can drag the `.iso` onto `extract_assets.bat` instead.
+That's the whole route: it verifies your copy against the container's own
+integrity hashes (so a bad copy is caught immediately, with the file named),
+extracts the game into `assets/`, and installs any DLC packages it finds into
+`dlc/`. Nothing needs converting first, and a corrupt or incomplete copy cannot
+slip through to the build.
 
 ## Route B — dumping the disc directly
 
 Reading an Xbox 360 disc at full size needs a PC optical drive whose firmware can
 be persuaded to read the XGD layout, which in practice means a handful of specific
 Lite-On / BenQ / Samsung models. If you have one of those and it's already set up,
-dump the disc to an ISO and pick up at step 4 above. If you don't, Route A is far
-less trouble — a disc install reads the same data off the disc using the console's
-own drive.
+dump the disc to an ISO, then drag the `.iso` onto `extract_assets.bat` (or run
+`python scripts/extract_iso.py game.iso --out assets/`). If you don't, Route A is
+far less trouble — a disc install reads the same data off the disc using the
+console's own drive.
 
 ## DLC
 
-Marketplace content lives beside the game, in the `00000002` folder:
+Route A step 3 already handles this — packages found under `00000002` are
+validated (right console format, right title ID) and copied into `dlc/`
+automatically. If you'd rather do it by hand:
 
 ```
 Content\0000000000000000\435A07D7\00000002\<long hex filename>
@@ -70,10 +78,8 @@ Content\0000000000000000\435A07D7\00000002\<long hex filename>
 Copy those files into a `dlc/` folder next to `futari.exe`. **Leave the filenames
 alone** — the port sniffs each file's first four bytes for the STFS magic
 (`LIVE`, `CON `, `PIRS`), so the console's hex names are fine. The retail set is
-two packages, roughly 264 MB and 56 KB.
-
-In FATXplorer these also show up under *Shared Items → DLC*. Opening one in
-Velocity should show title ID `435A07D7`.
+two packages, roughly 264 MB and 56 KB. In FATXplorer these also show up under
+*Shared Items → DLC*.
 
 ## Checking you got the right files
 
@@ -116,9 +122,12 @@ launches say `already installed, skipping` instead.
 
 ## If something's wrong
 
-- **`extract_iso.py` says it can't find the XDVDFS volume descriptor** — the file
-  isn't a plain XDVDFS ISO. A GoD container needs converting first (Route A step 3);
-  some dumps are also split or truncated. `extract-xiso` is a useful second opinion.
+- **The extractor reports a data file "fails its hash" or "is incomplete"** — the
+  copy off the console's storage went bad (loose adapter, interrupted copy).
+  Nothing was harmed: re-copy the `435A07D7` folder and run it again.
+- **`extract_iso.py` says it can't find the XDVDFS volume descriptor** in an ISO —
+  the file isn't a plain XDVDFS ISO; some dumps are split or truncated.
+  `extract-xiso` is a useful second opinion.
 - **The game starts but modules fail to load** — `media/Module/` is incomplete;
   there should be 8 `.xex` files there.
 - **DLC lines never appear in the log** — the `dlc/` folder must sit next to

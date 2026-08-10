@@ -5,8 +5,13 @@ supply your own dump. This build does contain the game's own program code,
 recompiled, so it is only for people who own the game: do not redistribute it.
 
 ADD YOUR GAME
-  Drag your Mushihimesama Futari Ver. 1.5 disc .iso onto extract_assets.bat
-  (needs Python 3). It extracts default.xex + the game modules into assets\.
+  Drag either of these onto extract_assets.bat (needs Python 3):
+    - your Mushihimesama Futari Ver. 1.5 disc .iso, or
+    - the game's install folder copied off your own console's storage (the
+      435A07D7 folder - easiest route; no disc drive or conversion tools
+      needed, and it installs your DLC too). The console side of that is
+      walked through in docs/DUMPING.md in the source repository.
+  It extracts default.xex + the game modules into assets\.
   Already have the files extracted? Just put them in assets\ so that
   assets\default.xex and assets\media\ exist.
 

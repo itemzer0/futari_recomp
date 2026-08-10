@@ -15,10 +15,10 @@ PC execution, built on the [ReXGlue SDK](https://github.com/rexglue/rexglue-sdk)
 
 ![Mushihimesama Futari title screen](screenshots/title.png)
 
-**Latest release:** v1.4.2 — source only; the current player bundles are v1.4.1
-(Windows, macOS, Steam Deck). See [CHANGELOG.md](CHANGELOG.md). Per-OS build and
-packaging details: [PORTS.md](PORTS.md). Prebuilt bundles are not published here,
-so the path below is to build it yourself.
+**Latest release:** v1.5.0 (Windows, macOS, Steam Deck). See
+[CHANGELOG.md](CHANGELOG.md). Per-OS build and packaging details:
+[PORTS.md](PORTS.md). Prebuilt bundles are not published here, so the path below
+is to build it yourself.
 
 **Status:** title, menus, audio, controller, and saves work, and all 8 game modes
 load, run, and mode-switch cleanly. Deeper gameplay can still hit rare recompiler
@@ -40,22 +40,28 @@ the host app (`src/main.cpp`), the codegen inputs (`*.toml`), and the build.
 
 You supply the game yourself, from a copy you own. Two pieces:
 
-**`assets/` — the disc (required).** Extract your **Ver 1.5** disc image:
+**`assets/` — the disc (required).** The extractor takes either a **Ver 1.5**
+disc ISO or the install folder copied straight off your console's storage
+(hash-verified, no conversion tools needed — see DUMPING.md):
 
 ```sh
 python scripts/extract_iso.py "Mushihimesama Futari Ver 1.5.iso" --out assets/
+# or, from a console disc install (also installs your DLC into dlc/):
+python scripts/extract_iso.py "path/to/435A07D7" --out assets/ --dlc-out dlc/
 ```
 
-On Windows you can drag the `.iso` onto
+On Windows you can drag the `.iso` — or that console folder — onto
 [`extract_assets.bat`](extract_assets.bat) instead. You should end up with
 `assets/default.xex` and an `assets/media/` tree containing the 8 module XEXs.
 The game reads `assets/` next to the exe; `--game_data_root <path>` points
 elsewhere.
 
-**`dlc/` — the marketplace DLC (optional).** Drop the Xbox 360 STFS packages into
-a `dlc/` folder next to the exe, filenames unchanged. They install themselves on
-first launch (`DLC: InstallContent(...) -> 0x00000000` in the log). No `dlc/`
-folder just means no extra content — the game runs fine without it.
+**`dlc/` — the marketplace DLC (optional).** The extractor installs these
+automatically when it finds them next to a console install; or drop the Xbox 360
+STFS packages into a `dlc/` folder next to the exe yourself, filenames unchanged.
+They install themselves on first launch
+(`DLC: InstallContent(...) -> 0x00000000` in the log). No `dlc/` folder just
+means no extra content — the game runs fine without it.
 
 📖 **[docs/DUMPING.md](docs/DUMPING.md)** walks through getting both off your own
 console, and lists checksums to verify the result.

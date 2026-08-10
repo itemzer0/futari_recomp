@@ -5,6 +5,23 @@ share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
 ## v1.5.1 — unreleased
 
+- **The extractor now reads console disc installs directly — no god2iso, no
+  Velocity.** Dumping your own copy is now: install the disc on the console,
+  copy the game's `Content\...\435A07D7` folder to your PC, and drag it onto
+  `extract_assets.bat`. `scripts/extract_iso.py` reads the Games on Demand
+  (SVOD) container natively, verifies the copy against the container's own
+  SHA-1 hash tree first (a corrupt or truncated copy is refused up front, with
+  the exact file named), and installs any marketplace DLC packages it finds
+  into `dlc/` after checking each one really is DLC for this game. Validated
+  against a real console install: all 9 executables match the checksums in
+  DUMPING.md, and the extracted tree is byte-identical to a disc rip's.
+- **ISO extraction produced garbage for every file; fixed.** XDVDFS sector
+  numbers are relative to the partition, but the script based reads at the
+  volume descriptor's own offset — 32 sectors (0x10000 bytes) too late, for
+  every file, since the first release. It cannot ever have produced a correct
+  extraction; working dumps historically came from the extract-xiso tooling
+  this repo once vendored. An XGD2 rip (partition at 0xFD90000) now extracts
+  correctly, byte-identical to the console-install route.
 - **macOS builds from the tag work again.** The vendored SDK's version-pin file
   was named `VERSION`, the SDK root is on the include path, and APFS is
   case-insensitive — so libc++'s own `#include <version>` resolved to our data
