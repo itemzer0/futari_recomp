@@ -3,6 +3,16 @@
 Versions are per-repo; each release is a tag, with per-OS zips on the download
 share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
+## v1.5.1 — unreleased
+
+- **macOS builds from the tag work again.** The vendored SDK's version-pin file
+  was named `VERSION`, the SDK root is on the include path, and APFS is
+  case-insensitive — so libc++'s own `#include <version>` resolved to our data
+  file and every macOS translation unit failed to compile. The file is now
+  `REXGLUE_VERSION`, which no standard header will ever collide with. The
+  shipped v1.5.0 macOS bundle already carried this fix (applied post-tag);
+  v1.5.1 is the first tag that builds clean on macOS as checked out.
+
 ## v1.5.0 — 2026-08-09 (family & friends test round before going public)
 
 - **Bundles gain `gamecontrollerdb.txt`** — the community
