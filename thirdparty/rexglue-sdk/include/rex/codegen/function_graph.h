@@ -167,6 +167,9 @@ class FunctionGraph {
   // Register a chunk (address range claimed by config, blocks vacancy)
   void registerChunk(uint32_t base, uint32_t size);
 
+  // True if a registered chunk's range covers this address
+  bool isChunkClaimed(uint32_t addr) const;
+
   // Check if a region is vacant for absorption
   // fromAddr: the address we're expanding from (to check for null boundary)
   // targetAddr: the start of the region we want to absorb

@@ -1122,6 +1122,14 @@ void FunctionGraph::registerChunk(uint32_t base, uint32_t size) {
   REXCODEGEN_TRACE("FunctionGraph: registered chunk 0x{:08X}-0x{:08X}", base, base + size);
 }
 
+bool FunctionGraph::isChunkClaimed(uint32_t addr) const {
+  for (const auto& [chunkBase, chunkSize] : chunks_) {
+    if (addr >= chunkBase && addr < chunkBase + chunkSize)
+      return true;
+  }
+  return false;
+}
+
 bool FunctionGraph::isVacant(uint32_t fromAddr, uint32_t targetAddr) const {
   // Rule 1: Check for null dword at boundary
   if (memoryReader_) {

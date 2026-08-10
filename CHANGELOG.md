@@ -3,6 +3,20 @@
 Versions are per-repo; each release is a tag, with per-OS zips on the download
 share. Ports can sit on different versions — see [PORTS.md](PORTS.md).
 
+## Unreleased
+
+- **The shell's only codegen fatal is gone.** The README's one known issue —
+  the split block at `0x82081778` whose branch back into `sub_82081658`'s loop
+  could not be expressed — turned out to rest on a pointer-scan false
+  positive: the sole "pointer" to that address in the image is a
+  `lwz r16,0x1778(r8)` instruction whose encoding aliases the address. The
+  address is now declared a chunk of its parent, and the vendored SDK's
+  half-built chunk mechanism was completed to honour it: a chunk claims its
+  range (blocking the PDATA, exception-handler, gapfill, and pointer-scan
+  paths from re-splitting it) without emitting a function, a dispatch entry,
+  or the fatal. The generated shell changes by exactly one removed function;
+  all 8 modules and the shell boot unchanged.
+
 ## v1.5.1 — 2026-08-11 (Windows, macOS, Steam Deck)
 
 Extraction tooling and the macOS tag fix, cut mid-test-week for further testing.

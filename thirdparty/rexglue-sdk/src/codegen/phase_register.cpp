@@ -550,14 +550,21 @@ VoidResult registerEntryPoints(CodegenContext& ctx) {
   for (const auto& [address, cfg] : config.functions) {
     uint32_t size = cfg.getSize(address);
     std::string name = cfg.name.empty() ? fmt::format("sub_{:08X}", address) : cfg.name;
+
+    if (cfg.isChunk()) {
+      // A chunk is NOT a standalone function: its range belongs to its parent,
+      // which absorbs whatever it actually branches to as internal labels.
+      // Claiming the range blocks gapfill and (below) a PDATA record at the
+      // same address from re-splitting it into a function whose branches back
+      // into the parent's interior would be inexpressible.
+      graph.registerChunk(address, size);
+      configChunks++;
+      continue;
+    }
+
     graph.addFunction(address, size, FunctionAuthority::CONFIG, true);
     graph.setFunctionName(address, name);
     configFuncs++;
-
-    if (cfg.isChunk()) {
-      graph.registerChunk(address, size);
-      configChunks++;
-    }
   }
   if (configFuncs > 0) {
     REXCODEGEN_DEBUG("Analyze: {} CONFIG functions, {} chunks", configFuncs, configChunks);
@@ -599,6 +606,11 @@ VoidResult registerEntryPoints(CodegenContext& ctx) {
       size = 4;
 
     if (graph.getFunction(beginAddr) != nullptr) {
+      continue;
+    }
+    if (graph.isChunkClaimed(beginAddr)) {
+      REXCODEGEN_DEBUG("Analyze: PDATA entry 0x{:08X} is inside a config chunk, skipping",
+                       beginAddr);
       continue;
     }
 
@@ -679,6 +691,10 @@ VoidResult registerEntryPoints(CodegenContext& ctx) {
       continue;
     if (graph.isImport(addr))
       continue;
+    if (graph.isChunkClaimed(addr)) {
+      REXCODEGEN_DEBUG("Analyze: EH-discovered 0x{:08X} is inside a config chunk, skipping", addr);
+      continue;
+    }
 
     graph.addFunction(addr, 0, FunctionAuthority::DISCOVERED, true);
     ehFuncsQueued++;

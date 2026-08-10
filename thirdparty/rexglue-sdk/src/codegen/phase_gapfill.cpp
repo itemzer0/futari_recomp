@@ -144,6 +144,11 @@ void gapFillCodeRegions(CodegenContext& ctx) {
       if (graph.isEntryPoint(segment.start))
         continue;
 
+      // Skip if a config chunk claims this address — it belongs to a parent
+      // function, not to a new speculative one
+      if (graph.isChunkClaimed(segment.start))
+        continue;
+
       // Skip if this segment's start is inside another function
       if (auto* containingFunc = graph.getFunctionContaining(segment.start)) {
         continue;

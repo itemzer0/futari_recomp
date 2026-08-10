@@ -1,4 +1,4 @@
-# Function-entry seeds for Mushihimesama Futari Ver. 1.5
+﻿# Function-entry seeds for Mushihimesama Futari Ver. 1.5
 #
 # ReXGlue's analyzer discovers ~6065 functions; a reference XenonRecomp run
 # (its generated ppc_func_mapping.cpp — see scripts/build_module_hints.sh, which
@@ -26,8 +26,8 @@
 # NOTE: 0x820816EC (inside PDATA sub_82081658, which has an internal backward
 # branch to it) is intentionally NOT seeded. It's a tangled case — seeding it
 # turns the internal `b` into an unresolvable cross-function tail-call, no
-# better than leaving it. It only FATALs if that code path runs; revisit with
-# a midasm hook or proper split if the game actually reaches it.
+# better than leaving it. That FATAL is gone now — see the 0x82081778 chunk
+# below, which removed the only function that carried it.
 # Real functions ReXGlue misses (computed from the XenonRecomp/ReXGlue map diff):
 "0x82061D60" = {}
 "0x82061D70" = {}
@@ -58,7 +58,19 @@
 "0x8207DAB8" = {}
 "0x820807B0" = {}
 "0x82080F20" = {}
-"0x82081778" = {}
+# 0x82081778 is NOT a real function — it's an interior continuation of
+# sub_82081658: five register restores that rejoin the parent's loop at
+# 0x820816EC. Ghidra decompiles the parent as one clean structured function
+# (the parent's PDATA extent covers this range), and the only "pointer" to
+# 0x82081778 in the image is an instruction-encoding alias — the dword at
+# 0x82051AE8 is `lwz r16,0x1778(r8)`, which encodes as 0x82081778 and fooled
+# the data pointer-table scan into registering a function here. Emitted
+# standalone, its `b 0x820816EC` lands in the parent's interior —
+# inexpressible, and it was the shell's only REX_FATAL. Declared a chunk
+# instead (the SDK's chunk semantics were completed for this): the range is
+# claimed, the heuristic scans skip it, and no function, dispatch entry, or
+# fatal is emitted. The parent already emits every path it actually executes.
+"0x82081778" = { parent = 0x82081658, end = 0x82081794 }
 "0x82081794" = {}
 "0x820818F0" = {}
 "0x82081C5C" = {}
@@ -219,3 +231,5 @@
 
 # auto-seed: foreign-body conditional-branch targets (autoseed_branch_splits.py)
 "0x820E673C" = {}  # auto-seed: Unresolved-branch target
+
+

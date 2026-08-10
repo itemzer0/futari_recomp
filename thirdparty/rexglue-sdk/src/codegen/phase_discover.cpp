@@ -310,6 +310,15 @@ size_t dataPointerTableScan(CodegenContext& ctx) {
           uint32_t target = load_and_swap<uint32_t>(data + k);
           if (graph.isEntryPoint(target))
             continue;
+          if (graph.isChunkClaimed(target)) {
+            // A config chunk says this address is a parent's interior, not a
+            // function. Say where the pointer came from — a real dispatch
+            // table pointing at a chunk would mean the chunk config is wrong.
+            REXCODEGEN_WARN(
+                "pointer-table scan: 0x{:08X} (at data 0x{:08X}) is inside a config chunk, skipping",
+                target, base + static_cast<uint32_t>(k));
+            continue;
+          }
           if (!precededByFnBoundary(binary, target, /*strict=*/false))
             continue;  // not a real function entry -> would split a function
           graph.addFunction(target, 4, FunctionAuthority::VTABLE, true);
@@ -504,6 +513,11 @@ size_t functionPointerScan(CodegenContext& ctx) {
         if (!isPlausibleFnPtr(binary, fullAddr) ||
             !precededByFnBoundary(binary, fullAddr, /*strict=*/true))
           continue;
+        if (graph.isChunkClaimed(fullAddr)) {
+          REXCODEGEN_WARN("functionPointerScan: 0x{:08X} (lis/addi at 0x{:08X}) is inside a config chunk, skipping",
+                          fullAddr, addr);
+          continue;
+        }
 
         // Register as function with DISCOVERED authority and hasXrefs=true
         graph.addFunction(fullAddr, 4, FunctionAuthority::DISCOVERED, true);
@@ -531,6 +545,11 @@ size_t functionPointerScan(CodegenContext& ctx) {
         if (!isPlausibleFnPtr(binary, fullAddr) ||
             !precededByFnBoundary(binary, fullAddr, /*strict=*/true))
           continue;
+        if (graph.isChunkClaimed(fullAddr)) {
+          REXCODEGEN_WARN("functionPointerScan: 0x{:08X} (lis/ori at 0x{:08X}) is inside a config chunk, skipping",
+                          fullAddr, addr);
+          continue;
+        }
 
         graph.addFunction(fullAddr, 4, FunctionAuthority::DISCOVERED, true);
         existingFunctions.insert(fullAddr);

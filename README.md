@@ -159,20 +159,23 @@ thirdparty/rexglue-sdk/ # the SDK, vendored (VENDORED.md); its deps are submodul
 
 ## Known issues
 
-- **Shell edge case `0x820816EC`.** The analyzer splits a block at `0x82081778`
-  into its own function, but that block is really a continuation of
-  `sub_82081658` — it restores registers from the parent's frame and branches
-  back into a loop at `0x820816EC`. A branch into another function's interior
-  can't be expressed, so codegen emits a fatal there instead. It's the only such
-  case in the shell, nothing calls the block directly (it's reachable only via
-  indirect dispatch), and the game has not been observed hitting it. The likely
-  fix is to declare the block a chunk of its parent, which the SDK's function
-  config supports via its `parent` field.
+None currently known. Two earlier ones, for the record:
 
-Historically, entering a game mode host-crashed via under-sized jump tables. Fixed
-in the SDK: index-register copy tracing, manual `[[switch_tables]]` support, and
-out-of-range cases now fall back to faithful indirect dispatch rather than
-`__builtin_trap()`.
+- **The shell's one inexpressible branch (fixed).** Codegen used to split the
+  block at `0x82081778` into its own function, though it is really an interior
+  continuation of `sub_82081658` — register restores that rejoin the parent's
+  loop at `0x820816EC`, a branch that cannot be expressed from a separate
+  function, so it compiled to the shell's only `REX_FATAL`. The split turned
+  out to be a pointer-scan false positive: the only "pointer" to that address
+  in the whole image is a `lwz r16,0x1778(r8)` instruction, whose encoding
+  happens to equal `0x82081778`. The address is now declared a chunk of its
+  parent in `futari_functions.toml` (the SDK's function config `parent` field,
+  whose semantics were completed for this), no standalone function or dispatch
+  entry is emitted, and the fatal is gone.
+- Historically, entering a game mode host-crashed via under-sized jump tables.
+  Fixed in the SDK: index-register copy tracing, manual `[[switch_tables]]`
+  support, and out-of-range cases now fall back to faithful indirect dispatch
+  rather than `__builtin_trap()`.
 
 ## Credits
 
