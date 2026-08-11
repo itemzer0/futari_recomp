@@ -7,9 +7,9 @@ live in the [README](README.md); version history is in [CHANGELOG.md](CHANGELOG.
 
 | OS | Build | Status |
 |----|-------|--------|
-| Windows (x64) | manual clang-cl configure → `out/build/win-amd64` (README) | ✅ v1.5.1 (SDK v0.9.3.1) |
-| Steam Deck / Linux (x64) | `linux-amd64-release` preset, built in WSL | ✅ v1.5.1 (v1.5.0 was boot-verified on device; v1.5.1 relinks the same sources) |
-| macOS (arm64) | `mac-arm64-release` preset on the MBP, bundled by `mac-build/build_app.sh` | ✅ v1.5.1 (MoltenVK) |
+| Windows (x64) | manual clang-cl configure → `out/build/win-amd64` (README) | ✅ v1.5.2 (SDK v0.9.3.1) |
+| Steam Deck / Linux (x64) | `linux-amd64-release` preset, built in WSL | ✅ v1.5.2 (boot-verified on device) |
+| macOS (arm64) | `mac-arm64-release` preset on the MBP, bundled by `mac-build/build_app.sh` | ✅ v1.5.2 (MoltenVK) |
 
 **Windows builds are not a preset.** The project compiles with clang-cl while the
 presets default to `clang++`, so releases come from a hand-configured
